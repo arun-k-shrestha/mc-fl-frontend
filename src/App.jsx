@@ -11,10 +11,9 @@ export default function App() {
   const handleAsk = async() => {
     if (!question.trim()) return;
     setAnswer("");
-    
     setLoading(true);
     try{
-      const res = await fetch("https://mckeany-backend.onrender.com/ask",{
+      const res = await fetch("https://kpd2hzpvvq.us-west-2.awsapprunner.com/ask",{
         method: "POST",
         headers: {
           "Content-Type": "application/json",
