@@ -8,39 +8,61 @@ export default function App() {
   );
   const [loading, setLoading] = useState(false);
 
-  const handleAsk = async() => {
+  const handleAsk = async () => {
     if (!question.trim()) return;
+
     setAnswer("");
     setLoading(true);
-    try{
-      const res = await fetch("https://mc-fl-r70x.onrender.com/ask",{
+
+    try {
+      const res = await fetch("https://mc-fl-r70x.onrender.com/ask", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "Accept": "text/event-stream",
         },
-        body: JSON.stringify({question}),
+        body: JSON.stringify({ question }),
       });
 
-      // const data = await res.json();
-      // setAnswer(data.answer);
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}`);
+      }
+
+      if (!res.body) {
+        throw new Error("ReadableStream not supported or empty response body");
+      }
 
       const reader = res.body.getReader();
       const decoder = new TextDecoder("utf-8");
-      let done = false
+      let buffer = "";
 
-        while (!done) {
-        const { value, done: doneReading } = await reader.read();
-        done = doneReading;
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
 
-        const chunk = decoder.decode(value);
-        setAnswer((prev) => prev + chunk);
+        buffer += decoder.decode(value, { stream: true });
+
+        const parts = buffer.split("\n\n");
+        buffer = parts.pop() || "";
+
+        for (const part of parts) {
+          const lines = part.split("\n");
+          for (const line of lines) {
+            if (line.startsWith("data: ")) {
+              const text = line.slice(6);
+              if (text !== "[DONE]") {
+                setAnswer((prev) => prev + text);
+              }
+            }
+          }
+        }
       }
-
-    }catch{
+    } catch (err) {
       console.error(err);
       setAnswer("Error connecting to server.");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const handleKeyDown = (e) => {
