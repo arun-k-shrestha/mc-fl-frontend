@@ -13,7 +13,7 @@ export default function App() {
     setAnswer("");
     setLoading(true);
     try{
-      const res = await fetch("https://kpd2hzpvvq.us-west-2.awsapprunner.com/ask",{
+      const res = await fetch("https://mc-fl-r70x.onrender.com/ask",{
         method: "POST",
         headers: {
           "Content-Type": "application/json",
